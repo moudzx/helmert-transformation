@@ -2,11 +2,11 @@
 #include <math.h>
 
 typedef struct {
-	double a, f, eSquared;
+	double a, b, f, eSquared;
 } Ellipsoid;
 
 typedef struct {
-	double x,y,z;
+	double x, y, z;
 } PositionVector;
 
 typedef struct {
@@ -89,35 +89,82 @@ Coordinate geocentric_to_geographic(Datum datum){
 }
 
 int main(){
-	printf("Geographic Coordinate Transformation using Helmet7-parameter\n\n");
+
+	Ellipsoid WGS84;
+	WGS84.a = 6378137;
+	WGS84.f = 1/298.257223563;
+	WGS84.eSquared = 2 * WGS84.f - WGS84.f * WGS84.f;
+
+	Ellipsoid Clarke1880;
+	Clarke1880.a = 6378249.2;
+	Clarke1880.f = 1/293.4660212936;
+	Clarke1880.eSquared = 2 * Clarke1880.f - Clarke1880.f * Clarke1880.f;
+
+	Ellipsoid GRS80;
+	GRS80.a = 6378137;
+	GRS80.f = 1/298.257222101;
+	GRS80.eSquared = 2 * GRS80.f - GRS80.f * GRS80.f;
+
+	// same parameters
+	Ellipsoid NAD83 = GRS80;
+	Ellipsoid GDA94 = GRS80;
+
+
+	printf("Geographic Coordinate Transformation using Helmet 7-parameter\n\n");
 
 	Ellipsoid sourceEllipse;
-	printf("- Source ellipsoid:\n");
-	printf("Semi-major axis (a): ");
-	scanf("%lf", &sourceEllipse.a);
-	printf("Flattening (f): ");
-	scanf("%lf", &sourceEllipse.f);
-	sourceEllipse.eSquared = 2 * sourceEllipse.f - sourceEllipse.f * sourceEllipse.f;
+	printf("- Select source ellipsoid:\n");
+	printf("1) WGS 80 \n2) Clarke 1880 IGN \n3) GRS 80 \n
+		4) NAD 83 \n5) GDA 94 \n 6) Custom");
+	
+	unsigned int choice;
+	switch(choice){
+		case 1: sourceEllipse = WGS84; break;
+		case 2: sourceEllipse = Clarke1880; break;
+		case 3: sourceEllipse = GRS80; break;
+		case 4: sourceEllipse = NAD83; break;
+		case 5: sourceEllipse = GDA94; break;
+		case 6: printf("Semi-major axis (a): ");
+				scanf("%lf", &sourceEllipse.a);
+				printf("Flattening (f): ");
+				scanf("%lf", &sourceEllipse.f);
+				sourceEllipse.eSquared = 2 * sourceEllipse.f - sourceEllipse.f * sourceEllipse.f;
+				break;
+		default: printf("Invalid choice. Please enter 1, 2, 3, 4, 5 or 6.\n");
+	}
+
 
 	Ellipsoid targetEllipse;
-	printf("\n- Target ellipsoid\n");
-	printf("Semi-major axis (a): ");
-	scanf("%lf", &targetEllipse.a);
-	printf("Flattening (f): ");
-	scanf("%lf", &targetEllipse.f);
-	targetEllipse.eSquared = 2 * targetEllipse.f - targetEllipse.f * targetEllipse.f;
+	printf("1) WGS 80 \n2) Clarke 1880 IGN \n3) GRS 80 \n
+		4) NAD 83 \n5) GDA 94 \n 6) Custom");
+	
+	switch(choice){
+		case 1: targetEllipse = WGS84; break;
+		case 2: targetEllipse = Clarke1880; break;
+		case 3: targetEllipse = GRS80; break;
+		case 4: targetEllipse = NAD83; break;
+		case 5: targetEllipse = GDA94; break;
+		case 6: printf("Semi-major axis (a): ");
+				scanf("%lf", &targetEllipse.a);
+				printf("Flattening (f): ");
+				scanf("%lf", &targetEllipse.f);
+				targetEllipse.eSquared = 2 * targetEllipse.f - targetEllipse.f * targetEllipse.f;
+				break;
+		default: printf("Invalid choice. Please enter 1, 2, 3, 4, 5 or 6.\n");
+	}
 
-        Helmert helmert;
-        printf("\n- Helmet parameters\n");
-        printf("\nTx Ty Tz (m)   : ");
-        scanf("%lf %lf %lf", &helmert.Tx, &helmert.Ty, &helmert.Tz);
-        printf("Rx Ry Rz (arcsec): ");
-        scanf("%lf %lf %lf", &helmert.Rx, &helmert.Ry, &helmert.Rz);
-        printf("Scale    (ppm)   : ");
-        scanf("%lf", &helmert.s);
+
+    	Helmert helmert;
+    	printf("\n- Enter Helmet parameters\n");
+    	printf("\nTx Ty Tz (m)   : ");
+    	scanf("%lf %lf %lf", &helmert.Tx, &helmert.Ty, &helmert.Tz);
+    	printf("Rx Ry Rz (arcsec): ");
+    	scanf("%lf %lf %lf", &helmert.Rx, &helmert.Ry, &helmert.Rz);
+    	printf("Scale    (ppm)   : ");
+    	scanf("%lf", &helmert.s);
 
 	Coordinate sourceCoord;
-	printf("\n- Source coordinates:\n");
+	printf("\n- Enter your coordinates:\n");
 	printf("\nLatitude  (deg): ");
 	scanf("%lf", &sourceCoord.lat);
 	printf("Longitude (deg): ");
@@ -142,9 +189,9 @@ int main(){
 
 	// radian to degree
 	datum1.coordinate.lat *= (180.0 / PI);
-        datum1.coordinate.lon *= (180.0 / PI);
-        datum2.coordinate.lat *= (180.0 / PI);
-        datum2.coordinate.lon *= (180.0 / PI);
+    	datum1.coordinate.lon *= (180.0 / PI);
+    	datum2.coordinate.lat *= (180.0 / PI);
+    	datum2.coordinate.lon *= (180.0 / PI);
 
 	printf("\n- Results:\n");
 
@@ -157,5 +204,6 @@ int main(){
 		datum2.coordinate.lat, datum2.coordinate.lon, datum2.coordinate.h);
 	printf("Target geocentric position vector:\nX=%lf  Y=%lf  Z=%lf\n\n",
 		datum2.position.x, datum2.position.y, datum2.position.z);
+
 	return 0;
 }
